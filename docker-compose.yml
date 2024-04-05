@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: ./docker/nginx
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+    ports:
+      - "${APP_PORT:-80}:80"
+    environment:
+      PHP_PORT: ${PHP_PORT:-9000}
+    volumes:
+      - ./src:/var/www/html:delegated
+    networks:
+      main:
+    depends_on:
+      - php
+      - mysql
+      - mailhog
+
+  php:
+    build:
+      context: ./docker/php
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+    container_name: "php"
+    ports:
+      - "${PHP_PORT:-9000}:9000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./src:/var/www/html:delegated
+    networks:
+      - main
+
+  mysql:
+    image: mysql:8.2.0
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-laravel}
+      MYSQL_USER: ${DB_USER:-laravel}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secret}
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - main
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "${FORWARD_MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025"
+    networks:
+      - main
+
+networks:
+  main:
+
+volumes:
+  mysql:

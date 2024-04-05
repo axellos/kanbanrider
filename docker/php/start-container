@@ -1,0 +1,11 @@
+#!/bin/sh
+
+composer install
+
+php /var/www/html/artisan optimize:clear
+
+php /var/www/html/artisan event:cache
+php /var/www/html/artisan config:cache
+php /var/www/html/artisan route:cache
+
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
