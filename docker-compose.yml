@@ -18,7 +18,7 @@ services:
     depends_on:
       - php
       - mysql
-      - mailhog
+      - mailpit
 
   php:
     build:
