@@ -26,6 +26,7 @@ services:
       args:
         - UID=${UID:-1000}
         - GID=${GID:-1000}
+        - ENVIRONMENT=${ENVIRONMENT:-development}
     container_name: "php"
     ports:
       - "${PHP_PORT:-9000}:9000"

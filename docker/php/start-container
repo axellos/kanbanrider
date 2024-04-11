@@ -1,20 +1,31 @@
-#!/bin/sh
+#!/bin/bash
 
-cd /var/www/html
+cd /var/www/html || exit
+
+npm install
 
 composer install
 
 php -r "file_exists('.env') || copy('.env.example', '.env');"
 
-if grep -Fxq "APP_KEY=" .env
-then
+echo
+
+if grep -Fxq "APP_KEY=" .env; then
   php artisan key:generate
 fi
 
-php artisan optimize:clear
+if [ "$ENVIRONMENT" = "development" ]; then
+  sed -i "s/artisan octane:start --workers=/artisan octane:start --watch --workers=/g" "/etc/supervisor/conf.d/supervisord.conf"
+fi
 
-php artisan event:cache
-php artisan config:cache
-php artisan route:cache
+php artisan migrate
+
+if [ "$ENVIRONMENT" != "development" ]; then
+  php artisan optimize:clear
+
+  php artisan event:cache
+  php artisan config:cache
+  php artisan route:cache
+fi
 
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
