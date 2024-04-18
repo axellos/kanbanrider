@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Api\Auth;
 
-use App\Dto\LoginAttemptDto;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LoginRequest extends FormRequest
@@ -24,13 +23,11 @@ class LoginRequest extends FormRequest
         ];
     }
 
-    public function toDto(): LoginAttemptDto
+    public function getCredentials(): array
     {
-        return new LoginAttemptDto(
-            $this->input('email'),
-            $this->input('password'),
-            $this->getClientIp(),
-            $this->boolean('remember')
-        );
+        return [
+            'email' => $this->input('email'),
+            'password' => $this->input('password'),
+        ];
     }
 }

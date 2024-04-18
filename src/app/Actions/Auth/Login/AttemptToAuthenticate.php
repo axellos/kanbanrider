@@ -2,30 +2,36 @@
 
 namespace App\Actions\Auth\Login;
 
-use App\Dto\LoginAttemptDto;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\RateLimiter;
+use App\Http\Requests\Api\Auth\LoginRequest;
+use App\Services\Auth\LoginRateLimiter;
+use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 final readonly class AttemptToAuthenticate
 {
     public function __construct(
-        private GenerateAuthThrottleKey $generateAuthThrottleKey
+        private LoginRateLimiter $limiter,
+        private StatefulGuard $guard
     ) {
     }
 
-    public function execute(LoginAttemptDto $dto): void
+    public function execute(LoginRequest $request): void
     {
-        $throttleKey = $this->generateAuthThrottleKey->execute($dto->email, $dto->ip);
-
-        if (! Auth::guard('api')->attempt($dto->getCredentials(), $dto->remember)) {
-            RateLimiter::hit($throttleKey);
-
-            throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
-            ]);
+        if (! $this->guard->attempt(
+            $request->getCredentials(),
+            $request->boolean('remember')
+        )) {
+            $this->throwFailedAuthenticationException($request);
         }
+    }
 
-        RateLimiter::clear($throttleKey);
+    private function throwFailedAuthenticationException(Request $request): void
+    {
+        $this->limiter->increment($request);
+
+        throw ValidationException::withMessages([
+            'email' => __('auth.failed'),
+        ]);
     }
 }

@@ -2,32 +2,32 @@
 
 namespace App\Actions\Auth\Login;
 
-use App\Http\Requests\Api\Auth\LoginRequest;
+use App\Services\Auth\LoginRateLimiter;
 use Illuminate\Auth\Events\Lockout;
-use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 final readonly class EnsureRequestIsNotRateLimited
 {
     public function __construct(
-        private GenerateAuthThrottleKey $generateAuthThrottleKey
+        private LoginRateLimiter $limiter,
     ) {
     }
 
-    public function execute(LoginRequest $request): void
+    public function execute(Request $request): void
     {
-        $throttleKey = $this->generateAuthThrottleKey->execute(
-            $request->input('email'),
-            $request->getClientIp(),
-        );
-
-        if (! RateLimiter::tooManyAttempts($throttleKey, 5)) {
+        if (! $this->limiter->tooManyAttempts($request)) {
             return;
         }
 
         event(new Lockout($request));
 
-        $seconds = RateLimiter::availableIn($throttleKey);
+        $this->throwThrottleException($request);
+    }
+
+    private function throwThrottleException(Request $request): void
+    {
+        $seconds = $this->limiter->availableIn($request);
 
         throw ValidationException::withMessages([
             'email' => __('auth.throttle', ['seconds' => $seconds]),

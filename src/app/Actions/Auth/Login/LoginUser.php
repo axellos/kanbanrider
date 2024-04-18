@@ -2,7 +2,6 @@
 
 namespace App\Actions\Auth\Login;
 
-use App\Actions\Auth\RegenerateSession;
 use App\Http\Requests\Api\Auth\LoginRequest;
 
 final readonly class LoginUser
@@ -10,14 +9,14 @@ final readonly class LoginUser
     public function __construct(
         private EnsureRequestIsNotRateLimited $ensureRequestIsNotRateLimited,
         private AttemptToAuthenticate $attemptToAuthenticate,
-        private RegenerateSession $regenerateSession
+        private PrepareAuthenticatedSession $prepareAuthenticatedSession
     ) {
     }
 
     public function execute(LoginRequest $request): void
     {
         $this->ensureRequestIsNotRateLimited->execute($request);
-        $this->attemptToAuthenticate->execute($request->toDto());
-        $this->regenerateSession->execute($request);
+        $this->attemptToAuthenticate->execute($request);
+        $this->prepareAuthenticatedSession->execute($request);
     }
 }
