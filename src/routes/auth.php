@@ -22,6 +22,9 @@ Route::name('auth.')->group(function () {
         Route::post('/email/verify/send', [VerifyEmailController::class, 'sendVerifyLinkEmail'])
             ->name('verification.send');
 
+        Route::get('/email/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
+            ->name('verification.verify');
+
         Route::post('logout', [LogoutController::class, 'logout'])->name('logout');
     });
 });
