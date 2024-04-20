@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
+use App\Http\Controllers\Api\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::name('auth.')->group(function () {
@@ -18,6 +19,9 @@ Route::name('auth.')->group(function () {
     });
 
     Route::middleware(['auth:sanctum'])->group(function () {
+        Route::post('/email/verify/send', [VerifyEmailController::class, 'sendVerifyLinkEmail'])
+            ->name('verification.send');
+
         Route::post('logout', [LogoutController::class, 'logout'])->name('logout');
     });
 });
