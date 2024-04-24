@@ -29,6 +29,7 @@ RUN docker-php-ext-install pdo pdo_mysql pcntl
 
 RUN apt-get update && apt-get install -y \
     vim \
+    git \
     gpg \
     supervisor \
     && rm -rf /var/lib/apt/lists/*
