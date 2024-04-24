@@ -15,10 +15,6 @@ services:
       - ./src:/var/www/html:delegated
     networks:
       main:
-    depends_on:
-      - php
-      - mysql
-      - mailpit
 
   php:
     build:
@@ -36,6 +32,11 @@ services:
       - ./src:/var/www/html:delegated
     networks:
       - main
+    depends_on:
+      - app
+      - mysql
+      - redis
+      - mailpit
 
   mysql:
     image: mysql:8.2.0
@@ -53,6 +54,19 @@ services:
     networks:
       - main
 
+  redis:
+    image: redis:alpine
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - 'redis:/data'
+    networks:
+      main:
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      retries: 3
+      timeout: 5s
+
   mailpit:
     image: axllent/mailpit
     ports:
@@ -66,3 +80,4 @@ networks:
 
 volumes:
   mysql:
+  redis:
